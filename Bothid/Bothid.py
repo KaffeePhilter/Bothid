@@ -4,7 +4,7 @@ import random
 import discord
 from discord import User
 from discord.ext import commands
-import sqlite3 as sql
+import mysql.connector as sql
 
 from dotenv import load_dotenv
 
@@ -15,14 +15,23 @@ NO_PERMISSION_MSG = "you're not authorized to do this"
 # Environment setup
 load_dotenv()
 TOKEN = os.getenv('DISCORD_TOKEN')
-DB_ADDRESS = os.getenv('DB_TEST')
+DB_HOST = os.getenv('DB_HOST')
+DB_USER = os.getenv('DB_USER')
+DB_PWD = os.getenv('DB_PWD')
+DB_NAME = os.getenv('DB_NAME')
 
 bot = commands.Bot(command_prefix='!')
 
 
 # SQL DB
-sql_connect = sql.connect('database/bothid.db')
-sql_cursor = sql_connect.cursor()
+sql_db = sql.connect(
+    host=DB_HOST,
+    user=DB_USER,
+    password=DB_PWD,
+    database=DB_NAME
+)
+
+sql_cursor = sql_db.cursor()
 
 # HOW TO SQL COMMAND WITH SQLITE EXAMPLE
 # sql_command = """I'm a SQL Query just like any other;"""
@@ -39,40 +48,40 @@ sql_cursor = sql_connect.cursor()
 #
 
 # INITIAL SQL DATABASE SETUP
-sql_cursor.execute("CREATE TABLE IF NOT EXISTS guilds (id INTEGER PRIMARY KEY, name STRING NOT NULL, UNIQUE(id));")
-sql_connect.commit()
+sql_cursor.execute("CREATE TABLE IF NOT EXISTS guilds (id INTEGER PRIMARY KEY UNIQUE, name VARCHAR(255) NOT NULL );")
+sql_db.commit()
 
 
 @bot.event
 async def on_guild_join(guild):
 
     # create new guild member table
-    sql_cursor.execute("CREATE TABLE IF NOT EXISTS \"%s\" (id INTEGER UNIQUE, user_name STRING, coins INTEGER);" % guild.name)
+    sql_cursor.execute("CREATE TABLE IF NOT EXISTS %s (id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INTEGER UNSIGNED);" % guild.name)
     # insert new guild to guilds table
-    sql_cursor.execute("INSERT INTO guilds VALUES(?, \"%s\");" % (guild.id, guild.name))
+    sql_cursor.execute("INSERT INTO guilds VALUES(%d, %s);" % (guild.id, guild.name))
 
     # add all users in this guild to its table
     for member in guild.members:
-        sql_cursor.execute("INSERT INTO \"%s\" VALUES(%d, \"%s\", 50);" % (guild.name, member.id, member.name))
+        sql_cursor.execute("INSERT INTO %s VALUES(%d, %s, 50);" % (guild.name, member.id, member.name))
 
-    sql_connect.commit()
+    sql_db.commit()
 
 
 @bot.command(name='dbrefresh', hidden=True)
 async def dbrefresh(ctx):
     if not ctx.message.author.guild_permissions.administrator:
-        ctx.send(NO_PERMISSION_MSG)
+        await ctx.send(NO_PERMISSION_MSG)
         return
 
     guild = ctx.guild
 
     # create new guild member table
-    sql_cursor.execute("CREATE TABLE IF NOT EXISTS \"%s\" (id INTEGER UNIQUE, user_name STRING, coins INTEGER);" % guild.name)
+    sql_cursor.execute("CREATE TABLE IF NOT EXISTS %s (id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INT UNSIGNED);" % guild.name)
     # add all users in this guild to its table
     for member in guild.members:
-        sql_cursor.execute("INSERT INTO \"%s\" VALUES(%d, \"%s\", 50);" % (str(guild.name), int(member.id), str(member.name)))
-
-    sql_connect.commit()
+        sql_command = "INSERT INTO %s VALUES(%d, '%s', 50);" % (guild.name, member.id, member.name)
+        sql_cursor.execute(sql_command)
+        sql_db.commit()
 
     await ctx.send("database refreshed")
 
@@ -80,19 +89,16 @@ async def dbrefresh(ctx):
 @bot.command(name='coinrain', hidden=True)
 async def coinrain(ctx, amount: int = 0):
     if not ctx.message.author.guild_permissions.administrator:
-        ctx.send(NO_PERMISSION_MSG)
-        return
-    if amount <= 0:
-        await ctx.send("no valid amount")
+        await ctx.send(NO_PERMISSION_MSG)
         return
     if ctx.message.mentions:
         for user in ctx.message.mentions:
-            sql_cursor.execute("UPDATE \"%s\" SET coins = coins + %d WHERE id = %d" % (ctx.guild.name, amount, user.id))
-            sql_connect.commit()
+            sql_cursor.execute("UPDATE %s SET coins = coins + %d WHERE id = %d" % (ctx.guild.name, amount, user.id))
+            sql_db.commit()
     else:
         for user in ctx.guild.members:
-            sql_cursor.execute("UPDATE \"%s\" SET coins = coins + %d WHERE id = %d" % (ctx.guild.name, amount, user.id))
-            sql_connect.commit()
+            sql_cursor.execute("UPDATE %s SET coins = coins + %d WHERE id = %d" % (ctx.guild.name, amount, user.id))
+            sql_db.commit()
 
     await ctx.send("it rained %d coins into someones bank" % amount)
 
@@ -103,7 +109,7 @@ async def gamble(ctx, commit_coins: int = 0):
         await ctx.send(f'Not a valid coin number')
         return
 
-    sql_cursor.execute("SELECT coins FROM \"%s\" WHERE id = %d" % (ctx.guild.name, ctx.message.author.id))
+    sql_cursor.execute("SELECT coins FROM %s WHERE id = %d" % (ctx.guild.name, ctx.message.author.id))
     sql_result = sql_cursor.fetchone()
 
     member_coins = sql_result[0]
@@ -134,8 +140,8 @@ async def gamble(ctx, commit_coins: int = 0):
 
     won_coins = (win_factor * commit_coins) - commit_coins
     member_coins += won_coins
-    sql_cursor.execute("UPDATE \"%s\" SET coins = %d WHERE id = %d" % (ctx.guild.name, member_coins, ctx.message.author.id))
-    sql_connect.commit()
+    sql_cursor.execute("UPDATE %s SET coins = %d WHERE id = %d" % (ctx.guild.name, member_coins, ctx.message.author.id))
+    sql_db.commit()
 
     if won_coins <= 0:
         await ctx.send("More luck next time!")
@@ -155,7 +161,7 @@ async def roll(ctx):
 
 @bot.command(name='coins')
 async def coins(ctx):
-    sql_cursor.execute("SELECT coins FROM \"%s\" WHERE id = %d" % (ctx.guild.name, ctx.message.author.id))
+    sql_cursor.execute("SELECT coins FROM %s WHERE id = %d" % (ctx.guild.name, ctx.message.author.id))
     sql_result = sql_cursor.fetchone()
     await ctx.send(f"You got %d coins" % sql_result[0])
 
