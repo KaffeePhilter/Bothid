@@ -17,27 +17,20 @@ class Default(commands.Cog):
 
         # create new guild member table
         self.bot.sql_cursor.execute(
-            "CREATE TABLE IF NOT EXISTS %s (id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INTEGER UNSIGNED);" % guild.name)
+            f'CREATE TABLE IF NOT EXISTS {guild.id}(id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INTEGER UNSIGNED);')
         # insert new guild to guilds table
-        self.bot.sql_cursor.execute("INSERT INTO guilds VALUES(%d, %s);" % (guild.id, guild.name))
+        self.bot.sql_cursor.execute(f'INSERT INTO guilds VALUES({guild.id}, {guild.name});')
 
         # add all users in this guild to its table
         for member in guild.members:
-            self.bot.sql_cursor.execute("INSERT INTO %s VALUES(%d, %s, 50);" % (guild.name, member.id, member.name))
+            self.bot.sql_cursor.execute(f'INSERT INTO {guild.id} VALUES({member.id}, {member.name}, 50);')
 
     @commands.command(name='dbrefresh', hidden=True)
     @commands.has_role('admin')
     async def dbrefresh(self, ctx):
-        guild = ctx.guild
-
-        # create new guild member table
-        self.bot.sql_cursor.execute(
-            "CREATE TABLE IF NOT EXISTS %s (id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INT UNSIGNED);" % guild.name)
-        # add all users in this guild to its table
-        for _member in guild.members:
-            self.bot.sql_cursor.execute("INSERT INTO %s VALUES(%d, '%s', 50);" % (guild.name, _member.id, _member.name))
-
+        await self.on_guild_join(ctx.guild)
         await ctx.send("database refreshed")
+
 
 def setup(bot):
     bot.add_cog(Default(bot))

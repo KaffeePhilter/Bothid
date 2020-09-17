@@ -23,11 +23,11 @@ load_dotenv()
 class Bothid(commands.Bot):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+        self.log = self.create_logger(f'LOG_{datetime.now().date()}')
         self.sql_db = self.connect_db()
         self.sql_cursor = self.sql_db.cursor()
         self.sql_db_init()
         self.load_modules()
-        self.log = self.create_logger(f'LOG_{datetime.now().date()}')
 
     # HOW TO SQL COMMAND WITH MySQL.Connector EXAMPLE
     # sql_command = """I'm a SQL Query just like any other;"""
