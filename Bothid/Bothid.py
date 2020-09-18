@@ -1,21 +1,18 @@
 # bothid.py
 # GENERAL
-import os
 import logging
+import os
 from datetime import datetime
 
-# PRIVATE
-from utils import config_loader
-
+# SQL
+import aiomysql
 # DISCORD
 # from discord
 from discord.ext import commands
-
-# SQL
-import asyncio
-import aiomysql
-
 from dotenv import load_dotenv
+
+# PRIVATE
+from utils import config_loader
 
 load_dotenv()
 
@@ -23,8 +20,8 @@ load_dotenv()
 class Bothid(commands.Bot):
 
     def __init__(self, *args, **kwargs):
-        sql_cursor = None
-        sql_db = None
+        self.sql_cursor = None
+        self.sql_db = None
         super().__init__(*args, **kwargs)
         self.log = self.create_logger(f'LOG_{datetime.now().date()}')
         self.log.info(f'Bot is starting..')
