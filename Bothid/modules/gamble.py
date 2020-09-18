@@ -70,9 +70,9 @@ class Gamble(commands.Cog):
 
         # EV = 0,795 https://rechneronline.de/durchschnitt/erwartungswert.php
         # win_factor       lose , 1    , 2    , 3   , 4   , 5   , 10
-        win_percentages = [50_00, 25_00, 10_00, 5_00, 2_00, 1_00, 10]
+        win_percentages = [5000, 2500, 1000, 500, 200, 100, 10]
         win_factor = 0
-        rand_result = random.randint(0, PERCENT_MAX)
+        rand_result = random.randint(0, 10000)
         if rand_result < win_percentages[0]:
             win_factor = 0
         elif rand_result < win_percentages[1]:
