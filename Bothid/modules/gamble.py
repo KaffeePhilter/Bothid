@@ -73,19 +73,19 @@ class Gamble(commands.Cog):
         win_percentages = [50_00, 25_00, 10_00, 5_00, 2_00, 1_00, 10]
         win_factor = 0
         rand_result = random.randint(0, PERCENT_MAX)
-        if rand_result > PERCENT_MAX - win_percentages[0]:
+        if rand_result < win_percentages[0]:
             win_factor = 0
-        elif rand_result > PERCENT_MAX - win_percentages[1]:
+        elif rand_result < win_percentages[1]:
             win_factor = 1
-        elif rand_result > PERCENT_MAX - win_percentages[2]:
+        elif rand_result < win_percentages[2]:
             win_factor = 2
-        elif rand_result <= PERCENT_MAX - win_percentages[3]:
+        elif rand_result < win_percentages[3]:
             win_factor = 3
-        elif rand_result <= PERCENT_MAX - win_percentages[4]:
+        elif rand_result < win_percentages[4]:
             win_factor = 4
-        elif rand_result <= PERCENT_MAX - win_percentages[4]:
+        elif rand_result < win_percentages[5]:
             win_factor = 5
-        elif rand_result <= PERCENT_MAX - win_percentages[5]:
+        elif rand_result < win_percentages[6]:
             win_factor = 10
 
         won_coins = (win_factor * commit_coins) - commit_coins
