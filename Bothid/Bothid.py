@@ -1,7 +1,6 @@
 # bothid.py
 # GENERAL
 import os
-import random
 import logging
 from datetime import datetime
 
@@ -9,7 +8,7 @@ from datetime import datetime
 from utils import config_loader
 
 # DISCORD
-# from discord import *
+# from discord
 from discord.ext import commands
 
 # SQL
@@ -28,15 +27,6 @@ class Bothid(commands.Bot):
         self.sql_cursor = self.sql_db.cursor()
         self.sql_db_init()
         self.load_modules()
-
-    # HOW TO SQL COMMAND WITH MySQL.Connector EXAMPLE
-    # sql_command = """I'm a SQL Query just like any other;"""
-    # cursor.execute(sql_command)
-    # SAVE CHANGES:
-    # connect.commit()
-    # AND CLOSE WITH
-    # connect.close()
-    # SOURCE https://www.geeksforgeeks.org/sql-using-python/
 
     @staticmethod
     def connect_db():
@@ -85,138 +75,7 @@ class Bothid(commands.Bot):
         logger.addHandler(handler)
         return logger
 
-# @bot.event
-# async def on_command_error(ctx, error):
-#     if isinstance(error, commands.errors.CheckFailure):
-#         await ctx.send('You do not have permission to use this command')
-#
-#
-# @bot.event
-# async def on_guild_join(guild):
-#
-#     # create new guild member table
-#     bot.sql_cursor.execute("CREATE TABLE IF NOT EXISTS %s (id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INTEGER UNSIGNED);" % guild.name)
-#     # insert new guild to guilds table
-#     bot.sql_cursor.execute("INSERT INTO guilds VALUES(%d, %s);" % (guild.id, guild.name))
-#
-#     # add all users in this guild to its table
-#     for member in guild.members:
-#         bot.sql_cursor.execute("INSERT INTO %s VALUES(%d, %s, 50);" % (guild.name, member.id, member.name))
-#
-#     bot.sql_db.commit()
-#
-#
-# @bot.command(name='dbrefresh', hidden=True)
-# @commands.has_role('admin')
-# async def dbrefresh(ctx):
-#     guild = ctx.guild
-#
-#     # create new guild member table
-#     bot.sql_cursor.execute("CREATE TABLE IF NOT EXISTS %s (id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(64), coins INT UNSIGNED);" % guild.name)
-#     # add all users in this guild to its table
-#     for _member in guild.members:
-#         bot.sql_cursor.execute("INSERT INTO %s VALUES(%d, '%s', 50);" % (guild.name, _member.id, _member.name))
-#         bot.sql_db.commit()
-#
-#     await ctx.send("database refreshed")
-#
-#
-# @bot.command(name='coinrain', hidden=True)
-# @commands.has_role('admin')
-# async def coinrain(ctx, amount: int = 0):
-#     if ctx.message.mentions:
-#         for user in ctx.message.mentions:
-#             sql_cursor.execute("UPDATE %s SET coins = coins + %d WHERE id = %d" % (ctx.guild.name, amount, user.id))
-#             sql_db.commit()
-#     else:
-#         for user in ctx.guild.members:
-#             sql_cursor.execute("UPDATE %s SET coins = coins + %d WHERE id = %d" % (ctx.guild.name, amount, user.id))
-#             sql_db.commit()
-#
-#     await ctx.send("it rained %d coins into someones bank" % amount)
-#
-#
-# @bot.command(name='gamble', help='gamble some coins in form of "gamble [coins]"')
-# async def gamble(ctx, commit_coins: int = 0):
-#     if commit_coins <= 0:
-#         await ctx.send(f'Not a valid coin number')
-#         return
-#
-#     sql_cursor.execute("SELECT coins FROM %s WHERE id = %d" % (ctx.guild.name, ctx.message.author.id))
-#     sql_result = sql_cursor.fetchone()
-#
-#     member_coins = sql_result[0]
-#
-#     if member_coins < commit_coins:
-#         await ctx.send("Not enough coins")
-#         return
-#
-#     # EV = 0,795 https://rechneronline.de/durchschnitt/erwartungswert.php
-#     # win_factor        lose , 1    , 2    , 3   , 4   , 5   , 10
-#     win_percentages = [50_00, 25_00, 10_00, 5_00, 2_00, 1_00, 10]
-#     win_factor = 0
-#     rand_result = random.randrange(0, PERCENT_MAX)
-#     if rand_result > PERCENT_MAX - win_percentages[0]:
-#         win_factor = 0
-#     elif rand_result > PERCENT_MAX - win_percentages[1]:
-#         win_factor = 1
-#     elif rand_result > PERCENT_MAX - win_percentages[2]:
-#         win_factor = 2
-#     elif rand_result <= PERCENT_MAX - win_percentages[3]:
-#         win_factor = 3
-#     elif rand_result <= PERCENT_MAX - win_percentages[4]:
-#         win_factor = 4
-#     elif rand_result <= PERCENT_MAX - win_percentages[4]:
-#         win_factor = 5
-#     elif rand_result <= PERCENT_MAX - win_percentages[5]:
-#         win_factor = 10
-#
-#     won_coins = (win_factor * commit_coins) - commit_coins
-#     member_coins += won_coins
-#     sql_cursor.execute("UPDATE %s SET coins = %d WHERE id = %d" % (ctx.guild.name, member_coins, ctx.message.author.id))
-#     sql_db.commit()
-#
-#     if won_coins <= 0:
-#         await ctx.send("More luck next time!")
-#         return
-#     else:
-#         await ctx.send(f"You won %d coins!" % won_coins)
-#         return
-#
-#
-# @bot.command(name='roll', help='WIP')
-# async def roll(ctx):
-#     # TODO buildup the resulting message
-#     # TODO build a roll game
-#     response = random.randrange(0, 100)
-#     await ctx.send(response)
-#
-#
-# @bot.command(name='coins', help='Get your coins')
-# async def coins(ctx):
-#     sql_cursor.execute("SELECT coins FROM %s WHERE id = %d" % (ctx.guild.name, ctx.message.author.id))
-#     sql_result = sql_cursor.fetchone()
-#     await ctx.send(f"You got %d coins" % sql_result[0])
-#
-#
-# @bot.command(name='top', help='get the top X banks with "top [X]"')
-# async def top(ctx, rank:int = 10):
-#     if rank <= 0 or rank > ctx.guild.member_count:
-#         return
-#
-#     sql_cursor.execute("SELECT user_name, coins FROM %s ORDER BY coins DESC LIMIT %d" % (ctx.guild.name, rank))
-#     send = ""
-#     sql_result = sql_cursor.fetchall()
-#     i = 1
-#     for row in sql_result:
-#         send += str(i) + ". " + row[0] + " with " + str(row[1]) + "\n"
-#         i += 1
-#
-#     await ctx.send(send)
 
-# modules list something something module list grab from file
-
-
-bot = Bothid(command_prefix='!')
+bot = Bothid(command_prefix='!', owner_id=142622339434151936)
 
 bot.run(os.getenv('DISCORD_TOKEN'))
