@@ -1,13 +1,13 @@
 # bothid.py
 # GENERAL
+import asyncio
 import logging
 import os
-from datetime import datetime
+from datetime import datetime, timedelta
 
 # SQL
 import aiomysql
 # DISCORD
-# from discord
 from discord.ext import commands
 from dotenv import load_dotenv
 
@@ -26,6 +26,7 @@ class Bothid(commands.Bot):
         self.log = self.create_logger(f'LOG_{datetime.now().date()}')
         self.log.info(f'Bot is starting..')
         self.load_modules()
+        self.loop.create_task(self.__log())
 
     """ SQL """
 
@@ -84,6 +85,23 @@ class Bothid(commands.Bot):
                 self.log.debug(f'{name} module loaded')
             except commands.ExtensionNotFound:
                 self.log.error(f'could not load {name}')
+
+    async def __log(self):
+        await self.wait_until_ready()
+        while not self.is_closed():
+            sec = self.get_seconds()
+            self.log.debug(f'sleeping until next day: {sec}sec')
+            await asyncio.sleep(sec)
+            self.log = self.create_logger(f'LOG_{datetime.now().date()}')
+
+    @staticmethod
+    def get_seconds():
+        now = datetime.now()
+        clean = now + timedelta(days=1)
+        goal_time = clean.replace(hour=0, minute=0, second=0, microsecond=0)
+        start_time = now.replace(microsecond=0)
+        time_diff = (goal_time - start_time).seconds
+        return time_diff
 
     @staticmethod
     def create_logger(file: str):
