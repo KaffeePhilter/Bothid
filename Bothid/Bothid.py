@@ -88,14 +88,15 @@ class Bothid(commands.Bot):
 
     async def __log(self):
         await self.wait_until_ready()
+        self.log.debug(f'TASK "new log": started Task')
         while not self.is_closed():
-            sec = self.get_seconds()
-            self.log.debug(f'sleeping until next day: {sec}sec')
+            sec = self.time_to_next_day()
+            self.log.debug(f'TASK "new log": sleeping until next day: {sec}sec')
             await asyncio.sleep(sec)
             self.log = self.create_logger(f'LOG_{datetime.now().date()}')
 
     @staticmethod
-    def get_seconds():
+    def time_to_next_day():
         now = datetime.now()
         clean = now + timedelta(days=1)
         goal_time = clean.replace(hour=0, minute=0, second=0, microsecond=0)

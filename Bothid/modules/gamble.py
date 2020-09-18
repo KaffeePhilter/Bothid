@@ -1,5 +1,7 @@
 from discord.ext import commands
 import random
+import asyncio
+from datetime import datetime
 
 PERCENT_MAX = 100_00
 
@@ -7,10 +9,26 @@ PERCENT_MAX = 100_00
 class Gamble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
+        self.bot.loop.create_task(self.__daily_coin_rain())
 
     # commands:
     # @commands.command        instead of @bot.command()
     # @commands.Cog.listener() instead of @bot.event()
+
+    async def __daily_coin_rain(self):
+        await self.bot.wait_until_ready()
+        self.bot.log.debug(f'TASK "daily coin rain": started Task')
+        while not self.bot.is_closed():
+            sec = self.bot.time_to_next_day() + 300
+            self.bot.log.debug(f'TASK "daily coin rain": sleeping until next day: {sec}sec')
+            await asyncio.sleep(sec)
+            self.bot.log.info(f'Issuing coinrain for all servers...')
+            for guild in self.bot.guilds:
+                amount = random.randint(50, 1000)
+                for user in guild.members:
+                    await self.bot.sql_execute(f'UPDATE `{guild.id}` SET coins = coins + {amount} WHERE id = {user.id}')
+                self.bot.log.info(f'Daily coinrain for Guild {guild.name}:{guild.id} with {amount} coins')
+            self.bot.log.info(f'Daily Coinrain finished')
 
     @commands.command(name='coinrain', hidden=True)
     @commands.has_permissions(administrator=True)
