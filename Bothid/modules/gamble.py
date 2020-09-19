@@ -118,7 +118,8 @@ class Gamble(commands.Cog):
 
     @commands.command(name='coins', help='Get your coins')
     async def coins(self, ctx):
-        await ctx.send(f'You got {await self.bot.sql_helper.get_coins(ctx)[0]} coins')
+        coins = await self.bot.sql_helper.get_coins(ctx)
+        await ctx.send(f'You got {coins} coins')
 
     @commands.command(name='top', help='get the top X banks with "top [X]"')
     async def top(self, ctx, rank: int = 10):
