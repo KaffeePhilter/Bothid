@@ -79,25 +79,23 @@ class Gamble(commands.Cog):
             await ctx.send("Not enough coins")
             return
 
-        # EV = 1,023 https://rechneronline.de/durchschnitt/erwartungswert.php
-        # win_factor       1   , 2   , 3   , 5  , 10 , 25, 100
-        win_percentages = [6000, 2500, 1000, 500, 100, 10, 1]
+        # EV = 1,25 https://rechneronline.de/durchschnitt/erwartungswert.php
         win_factor = 0
         rand_result = random.randint(0, 10000)
-        if rand_result == win_percentages[6]:
+
+        # 5500 for 0
+        if rand_result <= 1:
             win_factor = 100
-        elif rand_result < win_percentages[5]:
+        elif rand_result <= 24:
             win_factor = 25
-        elif rand_result < win_percentages[4]:
+        elif rand_result <= 125:
             win_factor = 10
-        elif rand_result < win_percentages[3]:
+        elif rand_result <= 250:
             win_factor = 5
-        elif rand_result < win_percentages[2]:
+        elif rand_result <= 1100:
             win_factor = 3
-        elif rand_result < win_percentages[1]:
+        elif rand_result <= 3000:
             win_factor = 2
-        elif rand_result < win_percentages[0]:
-            win_factor = 1
 
         won_coins = (win_factor * commit_coins) - commit_coins
         member_coins += won_coins
