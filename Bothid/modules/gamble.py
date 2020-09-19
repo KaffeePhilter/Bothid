@@ -15,6 +15,12 @@ class Gamble(commands.Cog):
     # @commands.command        instead of @bot.command()
     # @commands.Cog.listener() instead of @bot.event()
 
+    async def add_user_to_db(self, user, guild, coins):
+        self.bot.log.debug(
+            f'{user.name}:{user.id} was not found in {guild.name}:{guild.id} database. Adding now with {coins} coins')
+        await self.bot.sql_execute(
+            f'INSERT INTO `{guild.id}` VALUES({user.id}, "{user.name}", {coins}, 0) ON DUPLICATE KEY UPDATE user_name = "{user.name}";')
+
     async def __daily_coin_rain(self):
         await self.bot.wait_until_ready()
         self.bot.log.debug(f'TASK "daily coin rain": started Task')
@@ -61,6 +67,11 @@ class Gamble(commands.Cog):
             return
 
         sql_result = await self.bot.sql_fetchmany(f'SELECT coins FROM `{ctx.guild.id}` WHERE id = {ctx.author.id}', 1)
+
+        if sql_result is None:
+            await self.add_user_to_db(ctx.author, ctx.guild, commit_coins % 51)
+            ctx.send(f'Oh I could not find you. Giving you {commit_coins % 51} coins. Have fun! :)')
+            return
 
         member_coins = sql_result[0]
 
@@ -111,6 +122,11 @@ class Gamble(commands.Cog):
     async def coins(self, ctx):
         sql_result = await self.bot.sql_fetchmany(
             f'SELECT coins FROM `{ctx.guild.id}` WHERE id = {ctx.author.id}', 1)
+
+        if sql_result is None:
+            await self.add_user_to_db(ctx.author, ctx.guild, 50)
+            ctx.send(f'Oh I could not find you. Giving you {50} coins. Have fun! :)')
+            return
 
         await ctx.send(f'You got {sql_result[0]} coins')
 
