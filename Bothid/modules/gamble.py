@@ -93,11 +93,11 @@ class Gamble(commands.Cog):
         elif rand_result < win_percentages[3]:
             win_factor = 5
         elif rand_result < win_percentages[2]:
-            win_factor = 2
+            win_factor = 3
         elif rand_result < win_percentages[1]:
-            win_factor = 1
+            win_factor = 2
         elif rand_result < win_percentages[0]:
-            win_factor = 0
+            win_factor = 1
 
         won_coins = (win_factor * commit_coins) - commit_coins
         member_coins += won_coins
