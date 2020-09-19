@@ -17,18 +17,10 @@ class Default(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-
-        # create new guild member table
-        await self.bot.sql_cursor.execute(
-            f'CREATE TABLE IF NOT EXISTS `{guild.id}`(id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(255), coins INTEGER UNSIGNED, level INTEGER UNSIGNED);')
-        # insert new guild to guilds table
-        await self.bot.sql_cursor.execute(
-            f'INSERT INTO guilds VALUES({guild.id}, "{guild.name}") ON DUPLICATE KEY UPDATE name = "{guild.name}";')
-
+        self.bot.sql_helper.new_guild(guild)
         # add all users in this guild to its table
         for member in guild.members:
-            await self.bot.sql_cursor.execute(
-                f'INSERT INTO `{guild.id}` VALUES({member.id}, "{member.name}", 50, 0) ON DUPLICATE KEY UPDATE user_name = "{member.name}";')
+            await self.bot.sql_helper.new_member(guild, member)
 
     @commands.command(name='dbrefresh', hidden=True)
     @commands.has_permissions(administrator=True)

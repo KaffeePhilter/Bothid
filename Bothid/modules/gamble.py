@@ -15,12 +15,7 @@ class Gamble(commands.Cog):
     # @commands.command        instead of @bot.command()
     # @commands.Cog.listener() instead of @bot.event()
 
-    async def add_user_to_db(self, user, guild, coins):
-        self.bot.log.debug(
-            f'{user.name}:{user.id} was not found in {guild.name}:{guild.id} database. Adding now with {coins} coins')
-        await self.bot.sql_execute(
-            f'INSERT INTO `{guild.id}` VALUES({user.id}, "{user.name}", {coins}, 0) ON DUPLICATE KEY UPDATE user_name = "{user.name}";')
-
+    """Task for daily coins for all servers, so that all people can play"""
     async def __daily_coin_rain(self):
         await self.bot.wait_until_ready()
         self.bot.log.debug(f'TASK "daily coin rain": started Task')
@@ -32,7 +27,7 @@ class Gamble(commands.Cog):
             for guild in self.bot.guilds:
                 amount = random.randint(50, 1000)
                 for user in guild.members:
-                    await self.bot.sql_execute(f'UPDATE `{guild.id}` SET coins = coins + {amount} WHERE id = {user.id}')
+                    await self.bot.sql_helper.update_coins(guild, user, amount)
                 self.bot.log.info(f'Daily coinrain for Guild {guild.name}:{guild.id} with {amount} coins')
             self.bot.log.info(f'Daily Coinrain finished')
 
@@ -43,17 +38,16 @@ class Gamble(commands.Cog):
         if ctx.message.mentions:
             if len(ctx.message.mentions) > 1:
                 for user in ctx.message.mentions:
-                    await self.bot.sql_execute(
-                        f'UPDATE `{ctx.guild.id}` SET coins = coins + {amount} WHERE id = {user.id}')
+                    await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, amount)
                     who += f'{user.name}, '
             else:
                 user = ctx.message.mentions[0]
-                await self.bot.sql_execute(f'UPDATE `{ctx.guild.id}` SET coins = coins + {amount} WHERE id = {user.id}')
+                await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, amount)
                 who = f'{user.name}'
 
         else:
             for user in ctx.guild.members:
-                await self.bot.sql_execute(f'UPDATE `{ctx.guild.id}` SET coins = coins + {amount} WHERE id = {user.id}')
+                await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, amount)
             who = "the whole server"
 
         self.bot.log.info(
@@ -66,14 +60,7 @@ class Gamble(commands.Cog):
             await ctx.send(f'{commit_coins} is not a valid coin number')
             return
 
-        sql_result = await self.bot.sql_fetchmany(f'SELECT coins FROM `{ctx.guild.id}` WHERE id = {ctx.author.id}', 1)
-
-        if sql_result is None:
-            await self.add_user_to_db(ctx.author, ctx.guild, commit_coins % 51)
-            ctx.send(f'Oh I could not find you. Giving you {commit_coins % 51} coins. Have fun! :)')
-            return
-
-        member_coins = sql_result[0]
+        member_coins = self.bot.sql_helper.get_coins(ctx)
 
         if member_coins < commit_coins:
             await ctx.send("Not enough coins")
@@ -100,7 +87,7 @@ class Gamble(commands.Cog):
         won_coins = (win_factor * commit_coins) - commit_coins
         member_coins += won_coins
 
-        await self.bot.sql_execute(f'UPDATE `{ctx.guild.id}` SET coins = {member_coins} WHERE id = {ctx.author.id}')
+        await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, won_coins)
 
         if won_coins <= 0:
             await ctx.send("More luck next time!")
@@ -109,24 +96,29 @@ class Gamble(commands.Cog):
             await ctx.send(f'You won {won_coins} coins!')
             return
 
-    @commands.command(name='roll', help='WIP')
-    async def roll(self, ctx):
-        # TODO buildup the resulting message
+    @commands.command(name='roll', help='Bet on a number')
+    async def roll(self, ctx, bet_number: int):
+
         # TODO build a roll game
         response = random.randrange(0, 100)
         await ctx.send(response)
 
+    @commands.command(name='coinflip', help='bet on a coinflip. !coinflip <heads | tails> <bet coins>')
+    async def coinflip(self, ctx, side, bet: int):
+        flip_res = random.choice(('heads', 'tails'))
+        if side != ('heads' or 'tails') or bet <= 0:
+            await ctx.send(f'no valid bet')
+        # TODO DB update stuff
+        if flip_res == side:
+            msg = f'{flip_res}! You won {bet * 2} coins!'
+        else:
+            msg = f'{flip_res}! You lost.. choose better next time!'
+
+        await ctx.send(msg)
+
     @commands.command(name='coins', help='Get your coins')
     async def coins(self, ctx):
-        sql_result = await self.bot.sql_fetchmany(
-            f'SELECT coins FROM `{ctx.guild.id}` WHERE id = {ctx.author.id}', 1)
-
-        if sql_result is None:
-            await self.add_user_to_db(ctx.author, ctx.guild, 50)
-            ctx.send(f'Oh I could not find you. Giving you {50} coins. Have fun! :)')
-            return
-
-        await ctx.send(f'You got {sql_result[0]} coins')
+        await ctx.send(f'You got {await self.bot.sql_helper.get_coins(ctx)[0]} coins')
 
     @commands.command(name='top', help='get the top X banks with "top [X]"')
     async def top(self, ctx, rank: int = 10):
@@ -134,7 +126,7 @@ class Gamble(commands.Cog):
             return
 
         send = ""
-        sql_result = await self.bot.sql_fetchall(
+        sql_result = await self.bot.sql_helper.fetchall(
             f'SELECT user_name, coins FROM `{ctx.guild.id}` ORDER BY coins DESC LIMIT {rank}')
 
         for i, row in enumerate(sql_result, 1):

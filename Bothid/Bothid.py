@@ -12,7 +12,7 @@ from discord.ext import commands
 from dotenv import load_dotenv
 
 # PRIVATE
-from utils import config_loader
+from utils import config_loader, sql_helper
 
 load_dotenv()
 
@@ -27,47 +27,13 @@ class Bothid(commands.Bot):
         self.log.info(f'Bot is starting..')
         self.load_modules()
         self.loop.create_task(self.__log())
-
-    """ SQL """
-
-    async def init_db(self, loop):
-        self.sql_db = await aiomysql.connect(
-            host=os.getenv('DB_HOST'),
-            user=os.getenv('DB_USER'),
-            password=os.getenv('DB_PWD'),
-            db=os.getenv('DB_NAME'),
-            loop=loop,
-            autocommit=True
-        )
-        self.log.debug(f'Database connection established')
-        self.sql_cursor = await self.sql_db.cursor()
-        await self.sql_execute(
-            f'CREATE TABLE IF NOT EXISTS guilds (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL );'
-        )
-        self.log.debug(f'Database initialized')
-
-    async def sql_execute(self, query: str):
-        await self.sql_cursor.execute(query)
-        self.log.debug(f'SQL Query executed: {query}')
-
-    async def sql_fetchall(self, query: str):
-        await self.sql_execute(query)
-        return await self.sql_cursor.fetchall()
-
-    async def sql_fetchmany(self, query: str, rows: int):
-        await self.sql_execute(query)
-        sql_res = None
-        if rows == 1:
-            sql_res = await self.sql_cursor.fetchone()
-        elif rows > 1:
-            sql_res = await self.sql_cursor.fetchmany(rows)
-        return sql_res
+        self.sql_helper = sql_helper.SQL_Helper(self.log)
 
     """ OTHER """
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.init_db(self.loop)
+        await self.sql_helper.init_db(self.loop)
         self.log.info(f'Bot started')
 
     def reload_modules(self):
