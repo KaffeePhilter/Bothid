@@ -60,7 +60,7 @@ class Gamble(commands.Cog):
             await ctx.send(f'{commit_coins} is not a valid coin number')
             return
 
-        member_coins = self.bot.sql_helper.get_coins(ctx)
+        member_coins = await self.bot.sql_helper.get_coins(ctx)
 
         if member_coins < commit_coins:
             await ctx.send("Not enough coins")

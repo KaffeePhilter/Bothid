@@ -17,7 +17,7 @@ class Default(commands.Cog):
 
     @commands.Cog.listener()
     async def on_guild_join(self, guild):
-        self.bot.sql_helper.new_guild(guild)
+       await self.bot.sql_helper.new_guild(guild)
         # add all users in this guild to its table
         for member in guild.members:
             await self.bot.sql_helper.new_member(guild, member)
