@@ -15,8 +15,10 @@ class Gamble(commands.Cog):
     # @commands.command        instead of @bot.command()
     # @commands.Cog.listener() instead of @bot.event()
 
-    """Task for daily coins for all servers, so that all people can play"""
     async def __daily_coin_rain(self):
+        """
+        Task for daily coins for all servers, so that all people can play
+        """
         await self.bot.wait_until_ready()
         self.bot.log.debug(f'TASK "daily coin rain": started Task')
         while not self.bot.is_closed():
@@ -26,6 +28,7 @@ class Gamble(commands.Cog):
             self.bot.log.info(f'Issuing coinrain for all servers...')
             for guild in self.bot.guilds:
                 amount = random.randint(50, 1000)
+                #TODO server messages
                 for user in guild.members:
                     await self.bot.sql_helper.update_coins(guild, user, amount)
                 self.bot.log.info(f'Daily coinrain for Guild {guild.name}:{guild.id} with {amount} coins')
@@ -38,7 +41,7 @@ class Gamble(commands.Cog):
         if ctx.message.mentions:
             if len(ctx.message.mentions) > 1:
                 for user in ctx.message.mentions:
-                    await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, amount)
+                    await self.bot.sql_helper.update_coins(ctx.guild, user, amount)
                     who += f'{user.name}, '
             else:
                 user = ctx.message.mentions[0]
@@ -47,7 +50,7 @@ class Gamble(commands.Cog):
 
         else:
             for user in ctx.guild.members:
-                await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, amount)
+                await self.bot.sql_helper.update_coins(ctx.guild, user, amount)
             who = "the whole server"
 
         self.bot.log.info(
