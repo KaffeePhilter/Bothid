@@ -79,9 +79,9 @@ class Gamble(commands.Cog):
             await ctx.send("Not enough coins")
             return
 
-        # EV = 0,795 https://rechneronline.de/durchschnitt/erwartungswert.php
-        # win_factor       lose, 1   , 2   , 5  , 10 , 25, 100
-        win_percentages = [5000, 2500, 1000, 500, 100, 10, 1]
+        # EV = 1,023 https://rechneronline.de/durchschnitt/erwartungswert.php
+        # win_factor       1   , 2   , 3   , 5  , 10 , 25, 100
+        win_percentages = [6000, 2500, 1000, 500, 100, 10, 1]
         win_factor = 0
         rand_result = random.randint(0, 10000)
         if rand_result == win_percentages[6]:
