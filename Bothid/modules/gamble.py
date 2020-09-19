@@ -84,7 +84,7 @@ class Gamble(commands.Cog):
         win_percentages = [5000, 2500, 1000, 500, 100, 10, 1]
         win_factor = 0
         rand_result = random.randint(0, 10000)
-        if rand_result < win_percentages[6]:
+        if rand_result == win_percentages[6]:
             win_factor = 100
         elif rand_result < win_percentages[5]:
             win_factor = 25
