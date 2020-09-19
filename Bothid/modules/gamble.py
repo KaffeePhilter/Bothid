@@ -55,14 +55,20 @@ class Gamble(commands.Cog):
         await ctx.send(f'it rained {amount} coins on {who}')
 
     @commands.command(name='gamble', help='gamble some coins in form of "gamble [coins]"')
-    async def gamble(self, ctx, commit_coins: int = 0):
-        if commit_coins <= 0:
-            await ctx.send(f'{commit_coins} is not a valid coin number')
+    async def gamble(self, ctx, bet: int = 0):
+        """
+        lets a user gamble with some coins
+        :param ctx: message.context object
+        :param bet: number of coins
+        :return: nothing
+        """
+        if bet <= 0:
+            await ctx.send(f'{bet} is not a valid coin number')
             return
 
         member_coins = await self.bot.sql_helper.get_coins(ctx)
 
-        if member_coins < commit_coins:
+        if member_coins < bet:
             await ctx.send("Not enough coins")
             return
 
@@ -84,7 +90,7 @@ class Gamble(commands.Cog):
         elif rand_result <= 3000:
             win_factor = 2
 
-        won_coins = (win_factor * commit_coins) - commit_coins
+        won_coins = (win_factor * bet) - bet
         member_coins += won_coins
 
         await self.bot.sql_helper.update_coins(ctx.guild, ctx.author, won_coins)
@@ -108,8 +114,15 @@ class Gamble(commands.Cog):
         flip_res = random.choice(('heads', 'tails'))
         if side != ('heads' or 'tails') or bet <= 0:
             await ctx.send(f'no valid bet')
-        # TODO DB update stuff
+
+        member_coins = await self.bot.sql_helper.get_coins(ctx)
+
+        if member_coins < bet:
+            await ctx.send("Not enough coins")
+            return
+
         if flip_res == side:
+            self.bot.sql_helper.update_coins()
             msg = f'{flip_res}! You won {bet * 2} coins!'
         else:
             msg = f'{flip_res}! You lost.. choose better next time!'

@@ -11,6 +11,11 @@ class SQL_Helper():
         load_dotenv()
 
     async def init_db(self, loop):
+        """
+        initilizes the db connection
+        :param loop: event loop of the bot
+        :return: nothing
+        """
         self.sql_db = await aiomysql.connect(
             host=os.getenv('DB_HOST'),
             user=os.getenv('DB_USER'),
@@ -27,10 +32,21 @@ class SQL_Helper():
         self.log.debug(f'Database initialized')
 
     async def new_member(self, guild, member):
+        """
+        creates a new user in the db
+
+        :param guild: discord.guild
+        :param member: discord.member
+        """
         await self.execute(
             f'INSERT INTO {guild.id} VALUES({member.id}, "{member.name}", 50, 0) ON DUPLICATE KEY UPDATE user_name = "{member.name}";')
 
     async def new_guild(self, guild):
+        """
+        creates a new guild, only needs a discord.guild object
+
+        :param guild: discord.guild
+        """
         # create new guild member table
         await self.execute(
             f'CREATE TABLE IF NOT EXISTS `{guild.id}`(id BIGINT UNSIGNED UNIQUE, user_name VARCHAR(255), coins INTEGER UNSIGNED, level INTEGER UNSIGNED);')
@@ -39,9 +55,24 @@ class SQL_Helper():
             f'INSERT INTO guilds VALUES({guild.id}, "{guild.name}") ON DUPLICATE KEY UPDATE name = "{guild.name}";')
 
     async def update_coins(self, guild, user, add_val: int):
+        """
+        update the coins for a user in a guild
+
+        :param guild: discord.guild
+        :param user: discord.user
+        :param add_val: int
+        :return: nothing
+        """
         await self.execute(f'UPDATE `{guild.id}` SET coins = coins + {add_val} WHERE id = {user.id}')
 
+    # @params
     async def get_coins(self, ctx):
+        """
+        get the coins of a user, needs the message context object
+
+        :param ctx: discord.ctx
+        :return nothing
+        """
         res = await self.fetchmany(
             f'SELECT coins FROM `{ctx.guild.id}` WHERE id = {ctx.author.id}', 1)
         # adding user if not exists
@@ -55,14 +86,30 @@ class SQL_Helper():
             return res[0]
 
     async def execute(self, query: str):
+        """
+        executes a given query
+        :param query: str
+        :return: nothing
+        """
         await self.sql_cursor.execute(query)
         self.log.debug(f'SQL Query executed: {query}')
 
     async def fetchall(self, query: str):
+        """
+        fetches all rows from the given query
+        :param query: must be a select query
+        :return: list of rows fetched
+        """
         await self.execute(query)
         return await self.sql_cursor.fetchall()
 
     async def fetchmany(self, query: str, rows: int):
+        """
+        fetches given number of rows and returns them
+        :param query: select query
+        :param rows: number of rows to fetch
+        :return: list of rows fetched
+        """
         await self.execute(query)
         sql_res = None
         if rows == 1:
