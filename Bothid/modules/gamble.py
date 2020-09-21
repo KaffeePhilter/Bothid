@@ -9,26 +9,67 @@ PERCENT_MAX = 100_00
 class Gamble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        self.bot.loop.create_task(self.__daily_coin_rain())
+        # BUGGED self.bot.loop.create_task(self.__daily_coin_rain())
 
     # commands:
     # @commands.command        instead of @bot.command()
     # @commands.Cog.listener() instead of @bot.event()
 
+    # TODO: find the bug in here, suspended until further investigation
     async def __daily_coin_rain(self):
         """
         Task for daily coins for all servers, so that all people can play
         """
+
+        # LOG:
+        # Task exception was never retrieved
+        # future: <Task finished name='Task-1' coro=<Gamble.__daily_coin_rain() done, defined at /home/bothid/Bothid/Bothid/modules/gamble.py:18> exception=AttributeError("module 'asyncio.streams' has no attribute 'IncompleteReadError'")>
+        # Traceback (most recent call last):
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/connection.py", line 598, in _read_bytes
+        #     data = await self._reader.readexactly(num_bytes)
+        #   File "/usr/lib64/python3.8/asyncio/streams.py", line 729, in readexactly
+        #     raise self._exception
+        #   File "/usr/lib64/python3.8/asyncio/selector_events.py", line 836, in _read_ready__data_received
+        #     data = self._sock.recv(self.max_size)
+        # ConnectionResetError: [Errno 104] Connection reset by peer
+        #
+        # During handling of the above exception, another exception occurred:
+        #
+        # Traceback (most recent call last):
+        #   File "/home/bothid/Bothid/Bothid/modules/gamble.py", line 33, in __daily_coin_rain
+        #     await self.bot.sql_helper.update_coins(guild, user, amount)
+        #   File "/home/bothid/Bothid/Bothid/utils/sql_helper.py", line 66, in update_coins
+        #     await self.execute(f'UPDATE `{guild.id}` SET coins = coins + {add_val} WHERE id = {user.id}')
+        #   File "/home/bothid/Bothid/Bothid/utils/sql_helper.py", line 94, in execute
+        #     await self.sql_cursor.execute(query)
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/cursors.py", line 239, in execute
+        #     await self._query(query)
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/cursors.py", line 457, in _query
+        #     await conn.query(q)
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/connection.py", line 428, in query
+        #     await self._read_query_result(unbuffered=unbuffered)
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/connection.py", line 622, in _read_query_result
+        #     await result.read()
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/connection.py", line 1105, in read
+        #     first_packet = await self.connection._read_packet()
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/connection.py", line 561, in _read_packet
+        #     packet_header = await self._read_bytes(4)
+        #   File "/usr/local/lib/python3.8/site-packages/aiomysql/connection.py", line 599, in _read_bytes
+        #     except asyncio.streams.IncompleteReadError as e:
+        # AttributeError: module 'asyncio.streams' has no attribute 'IncompleteReadError'
+        # Command raised an exception: AttributeError: 'NoneType' object has no attribute 'id'
+        # Command raised an exception: AttributeError: module 'asyncio.streams' has no attribute 'IncompleteReadError'
+
         await self.bot.wait_until_ready()
         self.bot.log.debug(f'TASK "daily coin rain": started Task')
         while not self.bot.is_closed():
-            sec = self.bot.time_to_next_day() + 300
+            sec = self.bot.time_to_next_day() + 5
             self.bot.log.debug(f'TASK "daily coin rain": sleeping until next day: {sec}sec')
             await asyncio.sleep(sec)
             self.bot.log.info(f'Issuing coinrain for all servers...')
             for guild in self.bot.guilds:
                 amount = random.randint(50, 1000)
-                #TODO server messages
+                # TODO server messages
                 for user in guild.members:
                     await self.bot.sql_helper.update_coins(guild, user, amount)
                 self.bot.log.info(f'Daily coinrain for Guild {guild.name}:{guild.id} with {amount} coins')

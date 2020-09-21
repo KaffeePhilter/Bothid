@@ -66,7 +66,7 @@ class Bothid(commands.Bot):
         now = datetime.now()
         clean = now + timedelta(days=1)
         goal_time = clean.replace(hour=0, minute=0, second=0, microsecond=0)
-        start_time = now.replace(microsecond=0)
+        start_time = now
         time_diff = (goal_time - start_time).seconds
         return time_diff
 
