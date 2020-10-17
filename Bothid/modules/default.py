@@ -37,6 +37,12 @@ class Default(commands.Cog):
             self.bot.reload_modules()
             await ctx.send(f'modules reloaded')
 
+    @commands.command(name='init', hidden=True)
+    @commands.has_permissions(administrator=True)
+    async def init(self, ctx):
+        self.bot.sql_helper.new_guild(ctx.guild)
+        await ctx.send(f'This guild has now been added to the database. Please don\'t execute this command again. Have fun!')
+
 
 def setup(bot):
     bot.add_cog(Default(bot))
