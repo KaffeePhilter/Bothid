@@ -26,15 +26,18 @@ class Bothid(commands.Bot):
         self.log = self.create_logger(f'LOG_{datetime.now().date()}')
         self.log.info(f'Bot is starting..')
         self.load_modules()
-        self.loop.create_task(self.__log())
+        self._task = self.loop.create_task(self.__log())
         self.sql_helper = sql_helper.SQL_Helper(self.log)
 
     """ OTHER """
 
     @commands.Cog.listener()
     async def on_ready(self):
-        await self.sql_helper.init_db(self.loop)
+        await self.sql_helper.init_db()
         self.log.info(f'Bot started')
+
+    def cog_unload(self):
+        self._task.cancel()
 
     def reload_modules(self):
         for name in config_loader.load_conf("config"):

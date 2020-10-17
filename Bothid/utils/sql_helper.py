@@ -1,27 +1,59 @@
 import os
 import aiomysql
+import asyncio
 from dotenv import load_dotenv
 
 
 class SQL_Helper():
-    def __init__(self, log):
+
+    def __init__(self, log, loop):
         self.sql_db = None
+        self.pool = None
         self.sql_cursor = None
+        self.timeout = self.reset_timeout()
         self.log = log
+        self.loop = loop
+        self._task_timeout = self.loop.create_task(self.__timeout)
         load_dotenv()
 
-    async def init_db(self, loop):
+    # TODO this is new
+    async def __timeout(self):
+        """
+        task for timeouting the db connect
+        :return: nothing
+        """
+        while True:
+            await asyncio.sleep(1)
+            self.timeout -= 1
+
+            if self.timeout <= 0:
+                self.log.info(f'Reconnecting db after timeout')
+                await self.reconnect()
+
+    async def init_db(self):
         """
         initilizes the db connection
         :param loop: event loop of the bot
         :return: nothing
         """
+
+        # TODO make pool everywhere
+
+        self.pool = await aiomysql.create_pool(
+            host=os.getenv('DB_HOST'),
+            user=os.getenv('DB_USER'),
+            password=os.getenv('DB_PWD'),
+            db=os.getenv('DB_NAME'),
+            loop=self.loop,
+            autocommit=True
+        )
+
         self.sql_db = await aiomysql.connect(
             host=os.getenv('DB_HOST'),
             user=os.getenv('DB_USER'),
             password=os.getenv('DB_PWD'),
             db=os.getenv('DB_NAME'),
-            loop=loop,
+            loop=self.loop,
             autocommit=True
         )
         self.log.debug(f'Database connection established')
@@ -30,6 +62,19 @@ class SQL_Helper():
             f'CREATE TABLE IF NOT EXISTS guilds (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL );'
         )
         self.log.debug(f'Database initialized')
+
+    # TODO this is new
+    async def reconnect(self):
+        """
+        reconnect the db
+        :return: nothing
+        """
+        await self.init_db()
+
+    # TODO this is new
+    def reset_timeout(self):
+        self.timeout = 600
+        return self.timeout
 
     async def new_member(self, guild, member):
         """
@@ -93,6 +138,9 @@ class SQL_Helper():
         """
         await self.sql_cursor.execute(query)
         self.log.debug(f'SQL Query executed: {query}')
+
+        # TODO this is new
+        self.reset_timeout()
 
     async def fetchall(self, query: str):
         """

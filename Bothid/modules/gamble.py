@@ -9,11 +9,14 @@ PERCENT_MAX = 100_00
 class Gamble(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
-        # BUGGED self.bot.loop.create_task(self.__daily_coin_rain())
+        self._task = self.bot.loop.create_task(self.__daily_coin_rain())
 
     # commands:
     # @commands.command        instead of @bot.command()
     # @commands.Cog.listener() instead of @bot.event()
+
+    def cog_unload(self):
+        self._task.cancel()
 
     # TODO: find the bug in here, suspended until further investigation
     async def __daily_coin_rain(self):
@@ -195,3 +198,4 @@ class Gamble(commands.Cog):
 
 def setup(bot):
     bot.add_cog(Gamble(bot))
+
