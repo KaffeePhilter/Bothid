@@ -13,7 +13,7 @@ class SQL_Helper():
         self.timeout = self.reset_timeout()
         self.log = log
         self.loop = loop
-        self._task_timeout = self.loop.create_task(self.__timeout)
+        self._task_timeout = self.loop.create_task(self.__timeout())
         load_dotenv()
 
     # TODO this is new
