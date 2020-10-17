@@ -27,7 +27,7 @@ class Bothid(commands.Bot):
         self.log.info(f'Bot is starting..')
         self.load_modules()
         self._task = self.loop.create_task(self.__log())
-        self.sql_helper = sql_helper.SQL_Helper(self.log)
+        self.sql_helper = sql_helper.SQL_Helper(self.log, self.loop)
 
     """ OTHER """
 
