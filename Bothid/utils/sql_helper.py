@@ -86,7 +86,7 @@ class SQL_Helper():
         :param member: discord.member
         """
         await self.execute(
-            f'INSERT INTO {guild.id} VALUES({member.id}, "{member.name}", 50, 0) ON DUPLICATE KEY UPDATE user_name = "{member.name}";')
+            f'INSERT INTO `{guild.id}` VALUES({member.id}, "{member.name}", 50, 0) ON DUPLICATE KEY UPDATE user_name = "{member.name}";')
 
     async def new_guild(self, guild):
         """
