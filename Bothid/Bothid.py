@@ -101,6 +101,6 @@ class Bothid(commands.Bot):
         return logger
 
 
-bot = Bothid(command_prefix=Bothid.determine_prefix(), owner_id=142622339434151936)
+bot = Bothid(command_prefix=determine_prefix(), owner_id=142622339434151936)
 
 bot.run(os.getenv('DISCORD_TOKEN'))
