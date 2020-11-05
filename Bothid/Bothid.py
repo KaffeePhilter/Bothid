@@ -30,7 +30,7 @@ class Bothid(commands.Bot):
         self.sql_helper = sql_helper.SQL_Helper(self.log, self.loop)
         self.prefixes = {}
 
-    def determine_prefix(bot, message):
+    async def determine_prefix(bot, message):
         guild = message.guild
         if guild:
             return bot.prefixes.get(guild.id, ['!', '?'])
