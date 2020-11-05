@@ -28,12 +28,28 @@ class Bothid(commands.Bot):
         self.load_modules()
         self._task = self.loop.create_task(self.__log())
         self.sql_helper = sql_helper.SQL_Helper(self.log, self.loop)
+        self.prefixes = {}
 
-    """ OTHER """
+    def determine_prefix(self, message):
+        guild = message.guild
+        if guild:
+            return self.prefixes.get(guild.id, ['!', '?'])
+        else:
+            return ['!', '?']
+
+    @commands.command(name='setprefix', administrator=True)
+    @commands.guild_only()
+    async def setprefix(self, ctx, *, prefix=""):
+        if prefix is None:
+            return
+        self.prefixes[ctx.guild.id] = prefix
+
+        ctx.send(f'command prefix changed to "{prefix}"')
 
     @commands.Cog.listener()
     async def on_ready(self):
         await self.sql_helper.init_db()
+        self.prefixes = self.sql_helper.get_prefixes()
         self.log.info(f'Bot started')
 
     def cog_unload(self):
@@ -84,6 +100,6 @@ class Bothid(commands.Bot):
         return logger
 
 
-bot = Bothid(command_prefix='!', owner_id=142622339434151936)
+bot = Bothid(command_prefix=Bothid.determine_prefix(), owner_id=142622339434151936)
 
 bot.run(os.getenv('DISCORD_TOKEN'))

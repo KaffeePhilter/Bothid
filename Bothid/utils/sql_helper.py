@@ -61,7 +61,7 @@ class SQL_Helper():
         self.log.debug(f'Database connection established')
         self.sql_cursor = await self.sql_db.cursor()
         await self.execute(
-            f'CREATE TABLE IF NOT EXISTS guilds (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL );'
+            f'CREATE TABLE IF NOT EXISTS guilds (id BIGINT UNSIGNED PRIMARY KEY, name VARCHAR(255) NOT NULL, prefix CHAR);'
         )
         self.log.debug(f'Database initialized')
 
@@ -167,3 +167,15 @@ class SQL_Helper():
         elif rows > 1:
             sql_res = await self.sql_cursor.fetchmany(rows)
         return sql_res
+
+    async def get_prefixes(self):
+        """
+        fetches the prefix for each server and returns a dictionary
+        :return: dictionary
+        """
+        temp_dict = dict()
+        rows = await self.fetchall(f'SELECT id, prefix from guilds')
+        for r in rows:
+            temp_dict[r[1]] = r[2]
+
+        return temp_dict
