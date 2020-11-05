@@ -27,6 +27,7 @@ class SQL_Helper():
             self.timeout -= 1
 
             if self.timeout <= 0:
+                self.sql_db.close()
                 self.log.info(f'Reconnecting db after timeout')
                 await self.reconnect()
 
@@ -54,7 +55,8 @@ class SQL_Helper():
             password=os.getenv('DB_PWD'),
             db=os.getenv('DB_NAME'),
             loop=self.loop,
-            autocommit=True
+            autocommit=True,
+            connect_timeout=None
         )
         self.log.debug(f'Database connection established')
         self.sql_cursor = await self.sql_db.cursor()
