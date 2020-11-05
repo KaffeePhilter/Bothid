@@ -39,7 +39,8 @@ class Bothid(commands.Bot):
         self.sql_helper = sql_helper.SQL_Helper(self.log, self.loop)
         self.prefixes = {}
 
-    @commands.command(name='setprefix', administrator=True)
+    @commands.command(name='setprefix')
+    @commands.has_permissions(administrator=True)
     @commands.guild_only()
     async def setprefix(self, ctx, *, prefix=""):
         if prefix is None:
