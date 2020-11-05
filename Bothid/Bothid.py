@@ -4,6 +4,7 @@ import asyncio
 import logging
 import os
 from datetime import datetime, timedelta
+import json
 
 # SQL
 import aiomysql
@@ -44,13 +45,18 @@ class Bothid(commands.Bot):
         if prefix is None:
             return
         self.prefixes[ctx.guild.id] = prefix
+        with open("res/prefixes.json", mode='w') as f:
+            json.dump(self.prefixes, f)
 
         ctx.send(f'command prefix changed to "{prefix}"')
 
     @commands.Cog.listener()
     async def on_ready(self):
         await self.sql_helper.init_db()
-        self.prefixes = self.sql_helper.get_prefixes()
+
+        with open("res/prefixes.json") as f:
+            self.prefixes = json.load(f)
+
         self.log.info(f'Bot started')
 
     def cog_unload(self):
