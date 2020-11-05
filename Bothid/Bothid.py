@@ -17,6 +17,14 @@ from utils import config_loader, sql_helper
 load_dotenv()
 
 
+async def determine_prefix(bot, message):
+    guild = message.guild
+    if guild:
+        return bot.prefixes.get(guild.id, ['!', '?'])
+    else:
+        return ['!', '?']
+
+
 class Bothid(commands.Bot):
 
     def __init__(self, *args, **kwargs):
@@ -29,13 +37,6 @@ class Bothid(commands.Bot):
         self._task = self.loop.create_task(self.__log())
         self.sql_helper = sql_helper.SQL_Helper(self.log, self.loop)
         self.prefixes = {}
-
-    async def determine_prefix(bot, message):
-        guild = message.guild
-        if guild:
-            return bot.prefixes.get(guild.id, ['!', '?'])
-        else:
-            return ['!', '?']
 
     @commands.command(name='setprefix', administrator=True)
     @commands.guild_only()
